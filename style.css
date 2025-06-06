@@ -1,0 +1,426 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.main-title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 2;
+    width: 100%;
+    color: #000080;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.video-effect-container {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+}
+
+#effect-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.scroll-arrows {
+    position: absolute;
+    top: 85%;
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+    font-size: 5vw;
+    color: #fff;
+    font-family: 'Montserrat Black', 'Segoe UI', Arial, sans-serif;
+    font-weight: 900;
+    opacity: 0.45;
+    cursor: pointer;
+    z-index: 3;
+    user-select: none;
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    animation: arrowBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes arrowBounce {
+    0%, 100% {
+        transform: translateX(-50%) rotate(90deg);
+    }
+    50% {
+        transform: translateX(-50%) rotate(90deg) translateY(-30px);
+    }
+}
+
+.section-container {
+    padding: 4em 2em;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 2.5em;
+    margin-bottom: 1em;
+    color: #000080;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.section-summary {
+    font-size: 1.2em;
+    line-height: 1.6;
+    color: #444;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body, button, input, select, textarea {
+    font-size: 1.2em;
+    color: #000;
+}
+
+/* HERO VIDEO STYLES (unchanged) */
+.video-effect-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
+#effect-canvas {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    background: #fff;
+    border-radius: 0;
+    box-shadow: none;
+    display: block;
+}
+
+.main-title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: auto;
+    margin: 0;
+    padding: 0.5vh 2vw;
+    color: #000080; /* Navy blue */
+    font-size: 1.5vw;
+    font-family: 'Montserrat Black', 'Segoe UI', Arial, sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    background: none;
+    border-radius: 0;
+    user-select: none;
+    pointer-events: none;
+    line-height: 1.1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transform: translate(-50%, -50%);
+}
+
+/* SECTION "Adjust or Die" (unchanged) */
+.section-container {
+    position: relative;
+    width: 80vw;
+    max-width: 1200px;
+    margin: 4vw auto;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    z-index: 3;
+    box-shadow: none;
+}
+
+.section-title {
+    font-family: 'Montserrat Black', 'Segoe UI', Arial, sans-serif;
+    font-size: 1.5vw;
+    font-weight: 900;
+    color: #000080;
+    letter-spacing: 0.04em;
+    text-align: center;
+    margin: 0 0 1vw 0;
+    text-transform: uppercase;
+    text-shadow: none;
+}
+
+.section-summary {
+    font-size: 1.1vw;
+    color: #000;
+    line-height: 1.6;
+    text-align: center;
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Dashboard Layout */
+.sandbox-section {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 2em;
+    background: #ffffff;
+    color: #000080;
+    text-align: center;
+}
+
+.sandbox-title {
+    font-size: 1.8em;
+    margin-bottom: 0.5em;
+    color: #000080;
+    text-align: center;
+}
+
+.sandbox-controls {
+    margin-bottom: 0.5em;
+    padding: 0.5em;
+    display: flex;
+    justify-content: center;
+}
+
+.sandbox-controls > div {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    justify-content: center;
+}
+
+.sandbox-layout {
+    display: flex;
+    gap: 1vw;
+    height: 600px;
+}
+
+.left-container {
+    display: flex;
+    gap: 1vw;
+    flex: 2;
+}
+
+.small-rectangle {
+    width: 200px;
+    background: #000080;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.animation-container {
+    flex: 1;
+    position: relative;
+}
+
+.graphs-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1vw;
+    flex: 1;
+}
+
+.sandbox-viz {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+#animation-swing {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #ffffff;
+}
+
+/* Ensure graphs are properly sized and contained */
+#zone-map, #outcome-scatter, #attack-angle-plot, #direction-angle-plot {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Responsive design */
+@media (max-width: 1600px) {
+    .sandbox-layout {
+        height: 500px;
+    }
+    
+    .small-rectangle {
+        width: 150px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .sandbox-layout {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .left-container {
+        flex-direction: column;
+    }
+    
+    .small-rectangle {
+        width: 100%;
+        height: 100px;
+    }
+    
+    .animation-container {
+        height: 400px;
+    }
+    
+    .graphs-container {
+        height: 800px;
+    }
+}
+
+/* The rest of your existing CSS for writeups, mlb-average text, etc., remains unchanged: */
+
+.sandbox-viz:empty {
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.active-suggestion {
+    background: #ddd !important;
+    color: #000;
+}
+
+.writeup-dropdown {
+    margin-top: 1vw;
+    margin-bottom: 2vw;
+    max-width: 90vw;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: 'Montserrat Black', 'Segoe UI', Arial, sans-serif;
+    font-size: 1vw;
+    line-height: 1.6;
+    color: #000;
+    background: none;
+}
+
+.writeup-dropdown summary {
+    font-family: 'Montserrat Black', 'Segoe UI', Arial, sans-serif;
+    color: #000080;
+    font-weight: 900;
+    font-size: 1.2vw;
+    cursor: pointer;
+    text-transform: uppercase;
+    list-style: none;
+    padding: 0.3vw 0;
+    outline: none;
+    user-select: none;
+}
+
+.writeup-dropdown[open] summary {
+    color: #000080;
+}
+
+.mlb-average {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    fill: #E63946;  /* red color */
+    text-anchor: middle;
+}
+
+svg text.mlb-average {
+    font-size: 12px !important;
+    fill: #E63946 !important;
+    text-anchor: middle;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin: 20px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 4px;
+}
+
+.player-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.count-selection {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+input[type="text"] {
+    padding: 0.4em 0.8em;
+    font-size: 1em;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #fff;
+    color: #000;
+}
+
+label {
+    font-weight: bold;
+    color: #000;
+}
+
+.dashboard-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.graph-container {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 400px;
+}
+
+#direction-angle-plot {
+    background: #fff;
+    padding: 1vw;
+    margin-bottom: 2vw;
+    /* Removed specific width and height to allow grid to size it */
+    /* width: 48vw; */
+    /* height: 48vw; */
+    overflow: auto;
+}
+
+.sandbox-viz svg {
+    transform: scale(0.7);
+    transform-origin: center;
+}
+
+#attack-angle-plot polygon {
+    fill: #000080 !important;
+}

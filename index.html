@@ -3,9 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>The Effect of 2 Strikes on a Hitter's Swing</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script type="module" src="story graphs/vis.js"></script>
+    <script type="module" src="story graphs/contactscatter.js"></script>
+    <script type="module" src="story graphs/radar.js"></script>
+    <script type="module" src="story graphs/yordanstats.js"></script>
+    <script type="module" src="story graphs/overall.js"></script>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+
+    <!-- Import the 3D animation script -->
+    <script type="module" src="./graphs/swingAnimationWithOBJ.js"></script>
+
     <script type="module">
         import { drawAttackAngle } from './graphs/attackAngle.js';
         import { drawBatSpeed } from './graphs/batSpeed.js';
@@ -13,155 +23,324 @@
         import { drawDirectionAngle } from './graphs/directionAngle.js';
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Load deltaHists.js after DOM is ready
+            const deltaHistsScript = document.createElement('script');
+            deltaHistsScript.type = 'module';
+            deltaHistsScript.src = 'story graphs/deltaHists.js';
+            document.head.appendChild(deltaHistsScript);
+
             const controls = d3.select('.sandbox-controls');
             controls.html(`
                 <div style="display:flex;align-items:center;gap:1em;">
                     <label style="color:#fff;font-weight:bold;">Player:
-                        <input id="player-input" list="player-list" placeholder="Enter player name" autocomplete="off"
+                        <input id="player-input" list="player-list" placeholder="e.g. Shohei Ohtani" autocomplete="off"
                                style="padding:0.4em 0.8em;font-size:1em;">
                         <datalist id="player-list"></datalist>
                     </label>
-                    <label style="color:#fff;font-weight:bold;">Count:
-                        <label><input type="radio" name="count" value="0-0" checked>0-0</label>
-                        <label><input type="radio" name="count" value="0-2">0-2</label>
+                    <label style="color:#fff;font-weight:bold;">Strikes:
+                        <label><input type="radio" name="count" value="0" checked> 0 Strikes</label>
+                        <label style="margin-left:10px;"><input type="radio" name="count" value="2"> 2 Strikes</label>
                     </label>
                 </div>
             `);
+
             const inputElem = document.getElementById('player-input');
             const dataList = document.getElementById('player-list');
             const radios = Array.from(document.getElementsByName('count'));
 
-            d3.csv('files/combined_data.csv', d3.autoType).then(data => {
-                const players = Array.from(new Set(
-                  data.map(d => d.batter_name.trim()).filter(n => n)
-                )).sort();
-                function populate(list) {
-                    dataList.innerHTML = list.map(n => `<option value="${n}">`).join('');
+            // Load JSONs
+            Promise.all([
+                d3.json('files/sandbox/players_angles_0str.json'),
+                d3.json('files/sandbox/players_angles_2str.json'),
+                d3.json('files/sandbox/zerostr_stats.json'),
+                d3.json('files/sandbox/twostr_stats.json')
+            ]).then(([players0, players2, zeroStats, twoStats]) => {
+                // Build lookups
+                const playerLookup = { '0': players0, '2': players2 };
+                const leagueLookup = { '0': zeroStats[0], '2': twoStats[0] };
+
+                // Autocomplete list from 0-strike players
+                const players = players0.map(d => d.name_with_stand).sort();
+                function populateList(filter = '') {
+                    const opts = filter
+                        ? players.filter(p => p.toLowerCase().includes(filter.toLowerCase())).slice(0, 10)
+                        : [];
+                    dataList.innerHTML = opts.map(p => `<option value="${p}">`).join('');
                 }
+                inputElem.addEventListener('input', () => populateList(inputElem.value));
 
-                inputElem.addEventListener('input', () => {
-                    const v = inputElem.value.toLowerCase();
-                    populate(
-                      v ? players.filter(p => p.toLowerCase().includes(v)).slice(0, 10) : []
-                    );
-                });
-
-                function getMax(field) {
-                    if (field === 'attack_angle') return 25;
-                    const m = d3.max(data, d => +d[field]) || 1;
-                    return Math.ceil(m / 10) * 10;
-                }
-                const maxAttackAngle   = getMax('attack_angle');
-                const maxBatSpeed      = getMax('bat_speed');
-                const maxSwingPathTilt = Math.ceil(
-                  (d3.max(data, d => Math.abs(+d.swing_path_tilt)) || 60) / 10
-                ) * 10;
-
-                function getCount() {
-                    const c = radios.find(r => r.checked);
-                    return c ? c.value : null;
+                function getSelectedCount() {
+                    return radios.find(r => r.checked).value;
                 }
 
                 function update() {
-                    const p = inputElem.value.trim();
-                    const c = getCount();
-                    let filtered = [], showData = [];
+                    const count = getSelectedCount();
+                    const playerName = inputElem.value.trim();
 
-                    if (players.includes(p) && c) {
-                        filtered = data.filter(d =>
-                          d.batter_name === p &&
-                          ((c === '0-0' && d.balls === 0 && d.strikes === 0) ||
-                           (c === '0-2' && d.balls === 0 && d.strikes === 2))
-                        );
-                        showData = filtered.length > 0 ? filtered : [];
-                    }
-                    if (showData.length === 0 && c) {
-                        showData = data.filter(d =>
-                          (c === '0-0' && d.balls === 0 && d.strikes === 0) ||
-                          (c === '0-2' && d.balls === 0 && d.strikes === 2)
-                        );
-                    }
-                    if (showData.length === 0) {
-                        showData = data;
-                    }
+                    // Attempt to find player stats
+                    const playerEntry = playerLookup[count].find(d => d.name_with_stand === playerName);
 
-                    // Clear prior charts
-                    d3.select('#zone-map').html('');
-                    d3.select('#outcome-scatter').html('');
-                    d3.select('#attack-angle-plot').html('');
-                    d3.select('#direction-angle-plot').html('');
+                    // Prepare drawData: single object array
+                    const drawObj = playerEntry
+                        ? playerEntry
+                        : Object.assign({ name_with_stand: 'League Average' }, leagueLookup[count]);
+                    const drawData = [drawObj];
 
-                    // Re‐draw all four graphs
-                    drawAttackAngle(d3.select('#zone-map'), showData, {
-                        title: 'Attack Angle (°)',
-                        max:   maxAttackAngle
-                    });
-                    drawBatSpeed(d3.select('#outcome-scatter'), showData, {
-                        title: 'Bat Speed (mph)',
-                        max:   maxBatSpeed
-                    });
-                    drawSwingPathTilt(d3.select('#attack-angle-plot'), showData, {
-                        title: 'Swing Path Tilt (°)',
-                        max:   maxSwingPathTilt
-                    });
-                    drawDirectionAngle(d3.select('#direction-angle-plot'), showData, {
-                        title: 'Direction Angle (°)',
-                        max:   maxAttackAngle
-                    });
+                    console.log('Drawing with data:', drawObj); // Debug log
 
-                    // Compute league or player averages
-                    const avgAttack = d3.mean(showData, d => +d.attack_angle) || 0;
-                    const avgDir    = d3.mean(showData, d => +d.direction_angle) || 0;
+                    // Clear previous
+                    d3.selectAll('.sandbox-viz').html('');
 
-                    // Send to 3D swing animation
+                    // Draw
+                    drawAttackAngle(d3.select('#zone-map'), drawData, { title: 'Attack Angle (°)', max: 60 });
+                    drawBatSpeed(d3.select('#outcome-scatter'), drawData, { title: 'Bat Speed (mph)', max: 120 });
+                    drawSwingPathTilt(d3.select('#direction-angle-plot'), drawData, { title: 'Swing Path Tilt (°)', max: 60 });
+                    drawDirectionAngle(d3.select('#attack-angle-plot'), drawData, { title: 'Direction Angle (°)', max: 60 });
+
+                    // 3D updates
                     if (window.updateAttackAngleVisualization) {
-                        window.updateAttackAngleVisualization(avgAttack);
+                        window.updateAttackAngleVisualization(drawObj.attack_angle);
                     }
                     if (window.updateDirectionAngleVisualization) {
-                        window.updateDirectionAngleVisualization(avgDir);
+                        window.updateDirectionAngleVisualization(drawObj.attack_direction);
+                    }
+                    if (window.updateSwingPathTilt) {
+                        window.updateSwingPathTilt(drawObj.swing_path_tilt);
                     }
                 }
 
+                // Event listeners
+                radios.forEach(r => r.addEventListener('change', update));
                 inputElem.addEventListener('change', update);
                 inputElem.addEventListener('keyup', e => { if (e.key === 'Enter') update(); });
-                radios.forEach(r => r.addEventListener('change', update));
 
-                // Initial draw (MLB averages)
+                // Initial
+                populateList();
                 update();
 
-                window.__statcast_full_data__ = data;
-            });
+            }).catch(err => console.error('Error loading JSON:', err));
         });
     </script>
+    <style>
+        #stats, #overall-graph, #scatter-contact-woba, #radarChart, #heatmap0, #heatmap2, #delta-hists, #correlation-graphs, .correlation-graph {
+            background: transparent;
+            border: none;
+            box-shadow: none !important;
+        }
+        
+        .card-circle {
+            fill: transparent;
+            stroke: #002D62;
+            stroke-width: 2;
+        }
+        
+        .circle-value, .circle-actual {
+            fill: #002D62;
+        }
+        
+        .circle-value.highlight {
+            fill: #DC143C;
+        }
+
+        #scatter-contact-woba svg, #radarChart svg, #heatmap0 svg, #heatmap2 svg, #delta-hists svg, .correlation-graph svg {
+            background: transparent;
+            box-shadow: none !important;
+        }
+
+        .radar-container, .heatmap, .hist-container {
+            background: transparent;
+            border: none;
+            box-shadow: none !important;
+        }
+
+        /* Make histogram wider */
+        #delta-hists {
+            width: 120%;
+            margin-left: -10%;
+        }
+
+        .hist-container {
+            width: 100%;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .heatmap {
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        /* Remove shadow from stats container */
+        #stats {
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        /* Remove shadow from radar container */
+        .radar-section {
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        .radar-container {
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        /* Correlation section styles */
+        #correlation-section {
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .correlation-graph {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+        .correlation-graph .title {
+            color: #EB6E1F !important;
+        }
+    </style>
 </head>
 <body>
     <h1 class="main-title" id="dynamic-title"></h1>
 
     <div class="video-effect-container">
         <canvas id="effect-canvas"></canvas>
-        <video id="source-video"
-               src="images/paredes.mp4"
-               preload="auto"
-               crossorigin="anonymous"
-               style="display:none;"
-               muted
-               autoplay
-               loop>
-        </video>
+        <video id="source-video" src="images/yordan.mp4" preload="auto" crossorigin="anonymous" style="display:none;" muted autoplay loop></video>
         
         <div class="scroll-arrows" onclick="scrollPastVideo()">&#x276F;&#x276F;&#x276F;</div>
     </div>
-
+    <!-- COMBINED STATS/INTRO/CHART CONTAINER -->
     <section class="section-container">
-        <h2 class="section-title" style="color: #000080;">3 strikes and you're out! How are MLB hitters staying alive?</h2>
-        <p class="section-summary">
-            Baseball Savant recently released new swing metrics, attack angle (º), attack direction (º), and swing path (tilt) (º), which allow the public to take a deeper dive into swing geometry and better understand how hitters approach each at-bat. These metrics help reveal the relationship between a hitter's swing characteristics and the outcomes they produce. For example, offering insight into how a player like Mookie Betts can hit 30 home runs despite being 5'9" with below-average swing speed.
-            <br><br>
-            It's common knowledge that hitters are taught to use a "B swing" in two-strike counts, which is a shorter, flatter path designed to protect the plate and avoid striking out. But do major leaguers follow this advice? Are they adjusting their swing geometry, including attack angle, direction, and swing path (tilt), when facing two strikes, or is the idea of a two-strike approach more myth than reality? To explore this, we examine how league-wide swing metrics change between 0-strike and 2-strike counts.
-            <br><br>
-            Therefore, we built a sandbox that lets you explore how individual hitters adjust their swing geometry in two-strike counts. Not every hitter follows the same blueprint, now it's your turn to find out who adapts, and who doesn't.
-        </p>
+        <div class="intro">
+            <p>
+                In 2024, Yordan Alvarez, outfielder/designated hitter for the Houston Astros, 
+                was voted an All-Star starter as a DH and All-Star for his third consecutive year and finished top 10 in AL MVP voting. 
+                His stats on the year speak for themselves: his 0.397 wOBA was in the 96th percentile, his 16.7 barrel% was in the 91st percentile, 
+                his 35 HRs was in the 94th percentile, and his 107 mph EV90 was in the 94th percentile, across all qualifying MLB hitters. 
+                This project will investigate how he had such a successful season by looking at the quality of his contact, how he approached two-strike counts, and more.
+            </p>
+        </div>
     </section>
+
+    <!-- CHART CONTAINER ONLY: side-by-side layout -->
+    <div id="chart-stats-container">
+    <div id="stats"></div>
+    <div id="overall-graph" class="chart"></div>
+    <div id="tooltip"></div>
+    </div>
+    
+    <section class="section-container">
+        <div class="graph-section">
+            <div class="heatmap-row">
+                <div class="plot-text">
+                    <h3 style="color: #EB6E1F;">2 Strike Contact% vs wOBA</h3>
+                    <p>
+                    In two strikes, hitters are taught a "B swing" to essentially protect the zone by shortening up/flattening their swing to prevent a strikeout and stay alive.
+                    As a result, while hitters are improving their ability to make contact, the effectiveness of that contact often declines, 
+                    meaning contact% may rise, but wOBA tends to fall. Yordan’s numbers in two-strike counts tell a different story: 
+                    he's making just as much contact than in zero strikes, and still ranking as one of the league’s top hitters, as seen in this scatter plot to the right. 
+                    So what is he doing different than the norm?
+                    </p>
+                </div>
+                <div id="scatter-contact-woba" class="chart"></div>
+            </div>
+        </div>
+        <!-- Radar Chart Section -->
+        <div class="graph-section">
+            <div class="heatmap-row">
+                <div id="radarChart"></div>
+                <div class="plot-text">
+                    <h3 style="color: #EB6E1F;">Yordan's 2-Strike Profile</h3>
+                    <p>
+                    Well Yordan’s numbers, in comparison to the rest of the league, offer insight into how he’s able to survive and be successful in two-strike counts. 
+                    Looking at the radar plot, we can see his high chase% and oppo% immediately stand out. While swinging out of the zone is typically seen as a negative, 
+                    Yordan is able to balance this out by hitting the ball the other way. He’s able to hit the ball 
+                    against the right-side infield shift, which is a valuable trait to have in two strikes albeit at the cost of some power, 
+                    but we can see that he is still barreling the ball at a well above average rate in two strikes.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="radar-section">
+            <div class="radar-text">
+                <h3 style="color: #EB6E1F;">Yordan's 2-Strike Profile</h3>
+                <p>
+                    Yordan Alvarez, compared to other MLB hitters, has noticeable top-notch attributes.
+                    A couple of things to focus on in this radar graph are the chase and oppo rates.
+                    The oppo rate represents his ability to hit to the opposite field, while the chase rate shows how often he expands his zone to make contact.
+                    This analysis can be highlighted more in the density graph.
+                </p>
+            </div>
+            <div class="radar-container">
+                <div id="radarChart"></div>
+            </div>
+        </div> -->
+
+        <!-- Attack Angle Section -->
+
+
+        <!-- Contact Zone Section -->
+        <div class="graph-section">
+            <div class="heatmap-row">
+                <div class="plot-text">
+                    <h3 style="color: #EB6E1F;">Contact% Between Counts</h3>
+                    <p>
+                        The side-by-side strike zone heatmaps reveal a significant difference in Yordan’s contact profile from zero strikes to two strikes. 
+                        With no strikes, he focuses on making contact pretty much only on pitches inside and over the heart of the plate, aligning with his natural swing path. 
+                        However, with two strikes, he expands the zone and makes contact mostly away from him. This not only shows his ability to adjust his 
+                        approach down in the count but also that he is able to maintain consistent contact quality while going out of his "comfort zone" to make contact.
+                    </p>
+                </div>
+                <div class="plot-pair">
+                    <div id="heatmap0" class="heatmap" style="margin-top: 5rem;"></div>
+                    <div id="heatmap2" class="heatmap" style="margin-top: 5rem;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delta Histograms Section -->
+        <div class="graph-section">
+            <h3 style="color: #EB6E1F;">Changes in Swing Metrics</h3>
+            <p>
+            Recently, Baseball Savant released new metrics to help characterize the geometry of a hitter’s swing: attack angle (º), attack direction (º), 
+            and swing path (tilt) (º). <a href="https://www.mlb.com/news/new-statcast-swing-metrics-2025" target="_blank" rel="noopener noreferrer"> More can be found here</a>. 
+            This allows us to perform further analysis and explore potential relationships between these swing characteristics and batted-ball outcomes like 
+            wOBA, contact%, groundball%, and more.
+            </p>
+            <div class="heatmap-row">
+                <div class="plot-text">
+                    <p>
+                    These histograms show how the variance in each swing angle changes across all hitters between zero-strike and two-strike counts.
+                    A higher variance indicates a greater degree of adjustment in that specific angle, and Yordan ranks in the 96th percentile for attack angle variance.
+                    This suggests that he's making significant swing adjustments in response to pitches mostly on the outer-half of the zone.
+                    Although his contact% is basically identical between zero and two strikes, he's showing that he has a more dynamic swing approach
+                    that allows him to adjust to pitch location and still drive the ball when pitchers make a mistake.
+                    The red line on the histograms highlights his percentile rank, showing just how much more he’s changing his swing in that angle compared to the rest of the league. 
+                    Click on the arrows to look through the graphs and explore the distribution of each angle more in detail.
+                    </p>
+                </div>
+                <div class="plot-pair" style="margin-left: auto; margin-right: 0;">
+                    <div id="delta-hists" style="margin-left: auto;"></div>
+                </div>
+            </div>
+        </div>
+
+        <h3 style="color: #EB6E1F;">But how does the rest of the league differ?</h3>
+        <p class = "But">
+        <br></br>
+        Below are scatter plots showing how changes in the variance of these swing angles relate to key outcome metrics, along with an interactive sandbox dashboard. 
+        Use these tools to explore league-wide trends, evaluate how Yordan’s two-strike approach is justified, 
+        and compare how your favorite player adjusts and how much better/worse their outcomes are between zero-strike and two-strike counts.
+        </p>
+
+      </section>
+
+    <!-- Correlation Section -->
+    <div id="correlation-section"></div>
 
     <!-- SANDBOX SECTION -->
     <section class="sandbox-section">
@@ -171,27 +350,27 @@
         <div class="sandbox-controls">
             <div style="display:flex;align-items:center;gap:1em;">
                 <label style="color:#fff;font-weight:bold;">Player:
-                    <input id="player-input" list="player-list" placeholder="Enter player name" autocomplete="off"
+                    <input id="player-input" list="player-list" placeholder="e.g., Shohei Ohtani" autocomplete="off"
                            style="padding:0.4em 0.8em;font-size:1em;">
                     <datalist id="player-list"></datalist>
                 </label>
-                <label style="color:#fff;font-weight:bold;">Count:
-                    <label><input type="radio" name="count" value="0-0" checked>0-0</label>
-                    <label><input type="radio" name="count" value="0-2">0-2</label>
+                <label style="color:#fff;font-weight:bold;">Strikes:
+                    <label><input type="radio" name="count" value="0" checked> 0 Strikes</label>
+                    <label style="margin-left:10px;"><input type="radio" name="count" value="2"> 2 Strikes</label>
                 </label>
             </div>
         </div>
 
         <!-- Dashboard Layout -->
         <div class="sandbox-layout">
-            <!-- Left side: Small rectangle and 3D model container -->
-            <div class="left-container">
-                <div class="small-rectangle"></div>
-                <div class="animation-container">
-                    <div class="sandbox-viz" id="animation-swing"></div>
-                </div>
+            <!-- Left side: Blue rectangle -->
+            <div class="small-rectangle"></div>
+
+            <!-- Middle: 3D model container -->
+            <div class="animation-container">
+                <div id="animation-swing"></div>
             </div>
-            
+
             <!-- Right side: 2x2 grid of squares -->
             <div class="graphs-container">
                 <div id="zone-map" class="sandbox-viz"></div>
@@ -202,22 +381,121 @@
         </div>
     </section>
 
+    <section>
+    <div class="side-by-side-texts">
+        <div class="plot-text">
+        <h3>Conclusion</h3>
+        <p>
+            While the scatter plots suggest there lies some correlation between changing up your swing mechanics and outcomes, 
+            these newly introduced swing angles offer a clearer picture instead: there isn't a one-size-fits-all solution for two-strike approaches.
+            Different combinations of mechanical adjustments can benefit players in different ways instead.
+            Hitters who understand the geometry of their own swing could potentially tailor the changes of their swings to maintain performance in two strikes.
+            Managers and coaches could also use these angles to gain some analytical insights into a player's tendencies, and even optimize lineup decisions as a result.
+            It's important to recognize that these angles exist within a broader context, as there are lots of confounding factors that all play a critical role in a hitter's
+            success and approach in two strikes. Therefore, while these new swing angles can provide valuable insight into a hitter's swing, they should be used alongside other data/metrics
+            to form a more complete understanding of two-strike hitting.
+        </p>
+        </div>
+
+        <div class="plot-text">
+        <h3>References</h3>
+        <p>For further reading, check out the following resources:</p>
+        <ul>
+            <li><a href="https://www.mlb.com/news/new-statcast-swing-metrics-2025" target="_blank">Source: New Statcast Swing Metrics (2025)</a></li>
+            <li><a href="https://www.mlb.com/glossary/advanced-stats/weighted-on-base-average" target="_blank">Glossary: Weighted On-Base Average (wOBA)</a></li>
+            <li><a href="https://baseballsavant.mlb.com/leaderboard/bat-tracking/swing-path-attack-angle" target="_blank">Baseball Savant: Bat Tracking – Swing Path & Attack Angle</a></li>
+            <li><a href="https://baseballsavant.mlb.com/sporty-videos?playId=2009e2a5-bd86-44cb-9f67-b8bf65428910" target="_blank">Sporty Video: Swing Path Visualization</a></li>
+            <li><a href="https://pypi.org/project/pybaseball/" target="_blank">pybaseball: Python Package for Baseball Data Analysis</a></li>
+            <li><a href="https://baseballsavant.mlb.com/csv-docs" target="_blank">Baseball Savant: Documentation of the Data</a></li>
+        </ul>
+        </div>
+    </div>
+    </section>
+    <!-- <section>
+        <div class="heatmap-row">
+            <div class="plot-text">
+              <h3>Reference</h3>
+                <p class="Reference">
+                    <p>
+                        For further reading, check out the following resources:
+                    </p>
+                    <ul>
+                    <li>
+                        <a href="https://www.mlb.com/news/new-statcast-swing-metrics-2025" target="_blank">
+                        Source: New Statcast Swing Metrics (2025)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.mlb.com/glossary/advanced-stats/weighted-on-base-average" target="_blank">
+                        Glossary: Weighted On-Base Average (wOBA)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://baseballsavant.mlb.com/leaderboard/bat-tracking/swing-path-attack-angle" target="_blank">
+                        Baseball Savant: Bat Tracking – Swing Path & Attack Angle
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://baseballsavant.mlb.com/sporty-videos?playId=2009e2a5-bd86-44cb-9f67-b8bf65428910" target="_blank">
+                        Sporty Video: Swing Path Visualization
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://pypi.org/project/pybaseball/" target="_blank">
+                        pybaseball: Python Package for Baseball Data Analysis
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://baseballsavant.mlb.com/csv-docs" target="_blank">
+                        Baseball Savant: Documentation of the Data
+                        </a>
+                    </li>
+                    </ul>
+                </p>
+            </div>
+        </div>
+    </section> -->
+
+    <script type="module" src="vis/heatmap.js"></script>
+    <script type="module" src="story graphs/leagueCorrelation.js"></script>
+    <script type="module" src="graphs/statsTable.js"></script>
+
     <script>
-        // Dynamic colored title
         const titleWords = [
-            "The", "Effect", "of", "2", "Strikes", "on", "a", "Hitter's", "Swing"
+            ["The  ", "Effect"],
+            ["of"],
+            ["2  ", "Strikes"],
+            ["on", "a"],
+            ["Hitter's  ", "Swing"]
         ];
+
+        const highlightWords = new Set(["THE  ", "EFFECT", "2  ", "STRIKES", "HITTER'S  ", "SWING"]);
+        const specialColors = {
+            "2  ": "#ffffff",
+            "STRIKES": "#ffffff",
+            "EFFECT": "#ffffff"
+        };
+
         let html = "";
-        for (let word of titleWords) {
-            html += `<span style="color:#fff; opacity:0.95; font-size:1.9vw;">${word.toUpperCase()}</span> `;
+        for (let line of titleWords) {
+            html += `<div style="margin-bottom: 0.4vw;">`;
+            for (let word of line) {
+                const wordUpper = word.toUpperCase();
+                const fontSize = highlightWords.has(wordUpper) ? "4vw" : "1.5vw";
+                const color = specialColors[wordUpper] || "#ffffff";
+                html += `<span style="color:${color}; opacity:0.95; font-size:${fontSize}; margin-right: 0.4vw;">${wordUpper}</span>`;
+            }
+            html += `</div>`;
         }
         document.getElementById("dynamic-title").innerHTML = html.trim();
 
+    
+    
         // Video effect
         const video = document.getElementById('source-video');
         const canvas = document.getElementById('effect-canvas');
         const ctx = canvas.getContext('2d');
-
+    
         function resizeCanvas() {
             const container = document.querySelector('.video-effect-container');
             canvas.width = container.clientWidth;
@@ -225,7 +503,7 @@
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
-
+    
         function drawVideo() {
             if (video.readyState >= 2) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -237,7 +515,7 @@
             video.play();
             drawVideo();
         });
-
+    
         // Scroll past the video when arrows are clicked
         function scrollPastVideo() {
             const videoContainer = document.querySelector('.video-effect-container');
@@ -247,8 +525,5 @@
             });
         }
     </script>
-
-    <!-- Import the 3D animation script -->
-    <script type="module" src="./graphs/swingAnimationWithOBJ.js"></script>
 </body>
 </html>

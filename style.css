@@ -1,3 +1,50 @@
+:root {
+  --base-font: 'Montserrat', sans-serif;
+  --header-weight: 700;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--base-font) !important;
+  font-weight: var(--header-weight) !important;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #002D62; /* optional: unify color */
+  margin-block: 0;
+}
+
+body, p, span, li, td, th, label, input, select, textarea, button {
+  font-family: var(--base-font);
+  font-size: 14px;
+  font-weight: 400;
+  /* color: #000; optional: adjust for readability */
+}
+
+.side-by-side-texts {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: 1000px;   /* or use 90% if you want it more responsive */
+  margin: 2em auto;    /* center it horizontally with top/bottom spacing */
+  gap: 3em;            /* adjust this value for tighter spacing (2em–3em ideal) */
+  padding: 0 1em;      /* optional padding for breathing room on smaller screens */
+}
+
+.side-by-side-texts .plot-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.side-by-side-texts .plot-text:first-child {
+  flex: 1.3;
+  max-width: 700px;   /* Wider column to reduce text wrapping */
+  line-height: 1.4;   /* More compact vertical spacing */
+}
+
+svg text {
+  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 600; /* or 700/900 if bold needed */
+}
+
 html, body {
     margin: 0;
     padding: 0;
@@ -13,7 +60,7 @@ html, body {
     text-align: center;
     z-index: 2;
     width: 100%;
-    color: #000080;
+    color: #002D62;
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
@@ -63,22 +110,28 @@ html, body {
     padding: 4em 2em;
     max-width: 1200px;
     margin: 0 auto;
+    font-weight: bold;
 }
 
 .section-title {
-    font-size: 2.5em;
-    margin-bottom: 1em;
-    color: #000080;
+    font-size: 2.8vw; /* Slightly increased */
     font-weight: 900;
+    color: #002D62;
+    text-align: center;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    margin-bottom: 1em;
 }
 
-.section-summary {
-    font-size: 1.2em;
+
+.section-container p {
+    font-size: 1vw; /* Smaller than title */
+    font-weight: 400; /* Not bold */
+    color: #111; /* Softer than title navy */
     line-height: 1.6;
-    color: #444;
+    text-align: justify; /* Optional: for tidy block alignment */
+    margin-bottom: 1.5em;
 }
+
 
 * {
     box-sizing: border-box;
@@ -117,7 +170,7 @@ body, button, input, select, textarea {
     width: auto;
     margin: 0;
     padding: 0.5vh 2vw;
-    color: #000080; /* Navy blue */
+    color: #002D62; /* Navy blue */
     font-size: 1.5vw;
     font-family: 'Montserrat Black', 'Segoe UI', Arial, sans-serif;
     font-weight: 900;
@@ -154,7 +207,7 @@ body, button, input, select, textarea {
     font-family: 'Montserrat Black', 'Segoe UI', Arial, sans-serif;
     font-size: 1.5vw;
     font-weight: 900;
-    color: #000080;
+    color: #002D62;
     letter-spacing: 0.04em;
     text-align: center;
     margin: 0 0 1vw 0;
@@ -177,14 +230,14 @@ body, button, input, select, textarea {
     margin: 0 auto;
     padding: 2em;
     background: #ffffff;
-    color: #000080;
+    color: #002D62;
     text-align: center;
 }
 
 .sandbox-title {
     font-size: 1.8em;
     margin-bottom: 0.5em;
-    color: #000080;
+    color: #002D62;
     text-align: center;
 }
 
@@ -205,25 +258,46 @@ body, button, input, select, textarea {
 .sandbox-layout {
     display: flex;
     gap: 1vw;
-    height: 600px;
+    height: 600px;  /* Fixed height for the layout */
+    align-items: center;
 }
 
 .left-container {
     display: flex;
     gap: 1vw;
     flex: 2;
+    height: 100%;  /* Take full height of parent */
 }
 
 .small-rectangle {
     width: 200px;
-    background: #000080;
+    height: 100%;
+    background: #002D62;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .animation-container {
-    flex: 1;
+    flex: 2;
     position: relative;
+    height: 100%;  /* Take full height of parent */
+    min-height: 400px;  /* Minimum height */
+    display: flex;  /* Enable flex layout */
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+#animation-swing {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .graphs-container {
@@ -235,18 +309,16 @@ body, button, input, select, textarea {
 }
 
 .sandbox-viz {
-    background: #ffffff;
+    background: transparent;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: none;
     position: relative;
     overflow: hidden;
 }
 
-#animation-swing {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    background: #ffffff;
+/* Ensure the canvas itself is white */
+#animation-swing canvas {
+    background: #ffffff !important;
 }
 
 /* Ensure graphs are properly sized and contained */
@@ -261,6 +333,11 @@ body, button, input, select, textarea {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow: hidden;
+}
+
+/* Override fill for direction angle polygon */
+#attack-angle-plot polygon.orangeFill {
+  fill: orange !important;
 }
 
 /* Responsive design */
@@ -282,6 +359,7 @@ body, button, input, select, textarea {
     
     .left-container {
         flex-direction: column;
+        height: auto;
     }
     
     .small-rectangle {
@@ -290,7 +368,7 @@ body, button, input, select, textarea {
     }
     
     .animation-container {
-        height: 400px;
+        height: 400px;  /* Fixed height on mobile */
     }
     
     .graphs-container {
@@ -326,7 +404,7 @@ body, button, input, select, textarea {
 
 .writeup-dropdown summary {
     font-family: 'Montserrat Black', 'Segoe UI', Arial, sans-serif;
-    color: #000080;
+    color: #002D62;
     font-weight: 900;
     font-size: 1.2vw;
     cursor: pointer;
@@ -338,7 +416,7 @@ body, button, input, select, textarea {
 }
 
 .writeup-dropdown[open] summary {
-    color: #000080;
+    color: #002D62;
 }
 
 .mlb-average {
@@ -422,5 +500,691 @@ label {
 }
 
 #attack-angle-plot polygon {
-    fill: #000080 !important;
+    fill: #002D62 !important;
+}
+
+.no-card {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0;
+}
+
+#scatter-contact-woba {
+  flex: 1;
+  max-width: 60%;
+}
+
+.heatmap-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 3rem;
+  max-width: 1200px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+}
+
+.heatmap-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.plot-text {
+  flex: 1;
+  max-width: 35%;
+}
+
+.chart {
+  flex: 1;
+  min-width: 0;              /* ✅ Allows shrinking to fit */
+  height: 400px;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* —— pair of plots —— */
+.plot-pair {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    margin-right: 2rem;
+}
+
+/* —— each heat-map tile —— */
+.heatmap {
+    width: 300px;
+    height: 300px;
+    flex: 0 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.heatmap svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* —— explanatory text —— */
+.plot-text {
+    font-size: 1vw; /* Smaller than title */
+    font-weight: 400; /* Not bold */
+    color: #111; /* Softer than title navy */
+    line-height: 1.6;
+    text-align: justify; /* Optional: for tidy block alignment */
+    margin-bottom: 1.5em;
+}
+.plot-text .hl {
+    color: #F5C26B;
+    font-weight: 700;
+}
+
+/* —— stack vertically on small screens —— */
+@media (max-width: 850px) {
+    .heatmap-row { flex-direction: column; }
+    .plot-pair   { justify-content: center; }
+}
+
+.sandbox-viz {
+    flex: 0 0 auto;
+}
+  
+
+h3 {
+    color: #EB6E1F;
+}
+.chart-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+  
+.chart {
+    flex: 1;
+    height: 400px;
+    min-width: 0; /* Prevents flex items from overflowing */
+    position: relative;
+    overflow: visible !important;
+}
+  
+.chart svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+  
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .chart-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .chart {
+        width: 100%;
+        max-width: 800px;
+    }
+    
+    .heatmap-row {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .plot-pair {
+        justify-content: center;
+    }
+    
+    .plot-text {
+        max-width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .chart {
+        height: 300px;
+    }
+    
+    .heatmap {
+        width: 250px;
+        height: 250px;
+    }
+}
+
+/* Graph Sections */
+.graph-section {
+    margin: 6rem auto;
+    max-width: 1200px;
+    padding: 0 20px;
+}
+
+.graph-section h3 {
+    color: #002D62;
+    font-size: 1.5rem;
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+section, .graph-section {
+  margin-block-start: 0;   /* replaces margin-top in logical notation */
+  margin-block-end:   0;   /* replaces margin-bottom */
+}
+
+.graph-explanation {
+    padding: 4em 2em;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-weight: bold;
+}
+
+.graph-explanation p {
+    font-size: 1vw; /* Smaller than title */
+    font-weight: 400; /* Not bold */
+    color: #111; /* Softer than title navy */
+    line-height: 1.6;
+    text-align: justify; /* Optional: for tidy block alignment */
+    margin-bottom: 1.5em;
+}
+
+/* Chart Container */
+.chart-container {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.chart {
+    flex: 1;
+    height: 400px;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.chart svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.plot-pair {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    margin-right: 2rem;
+}
+
+.heatmap {
+    width: 300px;
+    height: 300px;
+    flex: 0 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.heatmap svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.plot-text {
+    flex: 1;
+    max-width: 480px;
+    line-height: 1.55;
+    padding: 0 20px;
+}
+
+.plot-text h3 {
+    color: #002D62;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.plot-text p {
+    font-size: 1vw; /* Smaller than title */
+    font-weight: 400; /* Not bold */
+    color: #111; /* Softer than title navy */
+    line-height: 1.6;
+    text-align: justify; /* Optional: for tidy block alignment */
+    margin-bottom: 1.5em;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .heatmap-row {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .plot-pair {
+        justify-content: center;
+    }
+    
+    .plot-text {
+        max-width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .heatmap {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .plot-text h3 {
+        font-size: 1.2rem;
+    }
+    
+    .plot-text p {
+        font-size: 1rem;
+    }
+}
+  
+
+.graph-section + .graph-section {
+  /* remove the block-level "gap" that normally appears */
+  margin-top: 0;          /* or reduce to whatever spacing you prefer */
+  padding-top: 0;
+}
+
+/* ---------- suppress the default <p> bottom-margin inside any graph section */
+.graph-section p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- wipe the inline 5-rem margin for your two heatmaps */
+#heatmap0,
+#heatmap2 {
+  margin-top: 0 !important;   /* !important overrides the inline style */
+}
+
+h1,h2,h3,h4,h5,h6,p { margin-block: 0; }
+
+/* big container */
+.outer-box {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 1.5;
+  }
+  
+  /* title at top */
+  .player-name {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    fill: #333;
+  }
+  
+  /* circles: no fill, only stroke */
+  .card-circle {
+    fill: none;
+    stroke: #bbb;
+    stroke-width: 1.2;
+  }
+  
+  /* big percentile text */
+  .circle-value {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-anchor: middle;
+    fill: #333;
+  }
+  
+  /* highlight high percentiles in orange */
+  .highlight {
+    fill: #ff7f0e;
+  }
+  
+  /* "Metric @ Value" under the big number */
+  .circle-actual {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    fill: #222;
+    text-anchor: middle;
+  }
+/* ============= combined stats/intro/chart container ============= */
+#chart-stats-container {
+    display: grid;
+    grid-template-columns: 30% 70%;
+    grid-template-rows: 1fr;
+    grid-template-areas:
+      "stats chart";
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 4rem auto;
+    height: auto; /* Changed from fixed height to auto */
+    min-height: 400px; /* Added minimum height to ensure scatter plot has space */
+}
+  
+#stats {
+    grid-area: stats;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    padding: 1rem;
+    height: auto; /* Changed from fixed height to auto */
+    overflow: hidden; /* Changed from overflow-y: auto to hidden */
+}
+  
+#intro-panel {
+    display: none;
+}
+#intro-panel .intro {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+  
+#chart-panel {
+    grid-area: chart;
+    position: relative;
+    height: 100%;
+}
+#overall-graph {
+    width: 100%;
+    height: 100%;
+}
+#tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    opacity: 0;
+    z-index: 1000;
+}
+  
+
+/* Add new styles for histogram containers */
+#delta-hists {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#delta-hists .hist-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem;
+    transition: transform 0.2s;
+}
+
+#delta-hists .hist-container:hover {
+    transform: translateY(-5px);
+}
+
+/* Remove the duplicate delta-hists section */
+section.graph-section {
+    margin: 0;
+    padding: 0;
+}
+
+/* Add hover effects to all graph containers */
+.chart, .heatmap, .sandbox-viz, .hist-container, .radar-container, #stats {
+    transition: all 0.3s ease;
+    transform: translateY(0);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chart:hover, .heatmap:hover, .sandbox-viz:hover, .hist-container:hover, .radar-container:hover, #stats:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+/* Specific styles for different graph types */
+.chart, .heatmap, .sandbox-viz, .radar-container, #stats {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+/* Ensure proper stacking context */
+.graph-section, .sandbox-layout {
+    position: relative;
+    z-index: 0;
+}
+
+/* Add smooth transition for all interactive elements */
+.chart *, .heatmap *, .sandbox-viz *, .hist-container * {
+    transition: all 0.3s ease;
+}
+
+#scatter-contact-woba {
+    width: 100%;
+    height: 400px; /* Keep scatter plot height fixed */
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* Radar chart section layout */
+.radar-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 2.5rem;
+    margin: 4rem auto;
+    max-width: 1200px;
+    padding: 0 20px;
+}
+
+.radar-text {
+    flex: 1;
+    max-width: 480px;
+    line-height: 1.55;
+    padding: 0 20px;
+    order: 1; /* Add order to control position */
+    margin-top: 2rem; /* Lowered the radar text a bit */
+}
+
+.radar-container {
+    flex: 0 0 auto;
+    width: 600px;
+    height: 600px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    order: 2; /* Add order to control position */
+}
+
+.radar-container svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.radar-text h3 {
+    color: #002D62;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.radar-text p {
+    font-size: 1vw;
+    font-weight: 400;
+    color: #111;
+    line-height: 1.6;
+    text-align: justify;
+    margin-bottom: 1.5em;
+}
+
+/* Responsive design for radar section */
+@media (max-width: 1200px) {
+    .radar-section {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .radar-container {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        aspect-ratio: 1;
+    }
+    
+    .radar-text {
+        max-width: 100%;
+        text-align: center;
+    }
+    
+    .radar-text p {
+        font-size: 1rem;
+    }
+}
+
+/* Histogram Card Styles */
+.histograms-stack {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  float: right;
+  margin-right: 2rem;
+}
+
+.hist-container {
+  backface-visibility: hidden;
+  transform-origin: center center;
+  transition: all 0.5s ease;
+  will-change: transform, opacity;
+}
+
+.hist-container:not(.active) {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+
+.hist-container.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.hist-title {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin: 0 0 0.5rem 0;
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.hist-navigation {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2rem;
+  z-index: 2;
+}
+
+.nav-arrow {
+  color: #ff6b00;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  user-select: none;
+}
+
+.nav-arrow:hover {
+  transform: scale(1.2);
+}
+
+.hist-counter {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 2rem;
+  clear: both;
+}
+
+/* Narrow text sections - reduced by additional 20% */
+.narrow-text {
+    width: 48%; /* Reduced from 60% to 48% (20% reduction) */
+    margin: 0 auto; /* Center the narrower text */
+    max-width: 576px; /* Reduced from 720px to 576px */
+}
+
+.swing-metrics-text {
+    padding: 2em 0;
+    text-align: center;
+}
+
+/* Add specific styling for plot-text-constrained */
+.plot-text-constrained {
+    width: 48%; /* Match the narrow-text width */
+    margin: 0 auto;
+    max-width: 576px;
+    font-size: 1vw;
+    font-weight: 400;
+    color: #111;
+    line-height: 1.6;
+    text-align: justify;
+    margin-bottom: 1.5em;
+}
+
+/* New styles for final section container */
+.final-section-container {
+    display: flex;
+    align-items: flex-start; /* align items at top */
+    justify-content: space-between;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 4rem auto;
+    padding: 0 20px;
+}
+.conclusion-container, .references-container {
+    flex: 1;
+    padding: 1rem;
+}
+@media (max-width: 800px) {
+    .final-section-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .conclusion-container, .references-container {
+        width: 100%;
+    }
 }

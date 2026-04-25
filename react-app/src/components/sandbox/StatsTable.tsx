@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
-import { NAVY, ORANGE } from '../../theme';
+import { ORANGE, SANDBOX_CARD_BG, SANDBOX_CARD_BORDER } from '../../theme';
 import type { PlayerRates } from '../../types/data';
 
 interface Props {
   playerName: string;
   strikeCount: '0' | '2';
   playerRates: PlayerRates | null;
+  /** Sits inside a parent panel — no own card border/radius. */
+  embedded?: boolean;
 }
 
 const FIELDS: { key: keyof PlayerRates; label: string; format: (v: number) => string }[] = [
@@ -17,15 +19,25 @@ const FIELDS: { key: keyof PlayerRates; label: string; format: (v: number) => st
   { key: 'gb%', label: 'GB%', format: v => (v * 100).toFixed(1) + '%' },
 ];
 
-export function StatsTable({ playerName, strikeCount, playerRates }: Props) {
+export function StatsTable({ playerName, strikeCount, playerRates, embedded = false }: Props) {
   const cleanName = playerName.replace(/[LR]$/, '');
 
   return (
-    <div className="rounded-2xl overflow-hidden flex flex-col h-full"
-      style={{ background: NAVY, border: '1px solid rgba(255,255,255,0.1)', minWidth: '160px' }}>
+    <div
+      className={
+        embedded
+          ? 'overflow-hidden flex flex-col h-full min-h-0 min-w-0'
+          : 'rounded-xl overflow-hidden flex flex-col h-full min-h-[280px]'
+      }
+      style={
+        embedded
+          ? { background: 'transparent', minWidth: '140px' }
+          : { background: SANDBOX_CARD_BG, border: `1px solid ${SANDBOX_CARD_BORDER}`, minWidth: '160px' }
+      }
+    >
 
       {/* Header */}
-      <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+      <div className="px-3 py-2.5 sm:px-4 sm:py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.45)' }}>
           {strikeCount} Strikes
         </div>

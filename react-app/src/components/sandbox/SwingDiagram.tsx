@@ -71,14 +71,22 @@ export function SwingDiagram({ attackAngle, swingPathTilt, attackDirection, batS
           transition={{ duration: 0.9, ease: 'easeOut' }}
         />
 
-        {/* Contact point (ball) */}
+        {/* Contact point (ball) — solid white reads on dark panels */}
         <motion.circle
-          cx={CX} cy={CY} r={14}
-          fill="#f5f5f5"
-          animate={{ scale: [1, 1.08, 1] }}
+          cx={CX} cy={CY} r={16}
+          fill="rgba(0,0,0,0.2)"
+          animate={{ scale: [1, 1.06, 1] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         />
-        <motion.circle cx={CX} cy={CY} r={7} fill="#ccc" />
+        <motion.circle
+          cx={CX} cy={CY} r={14}
+          fill="#ffffff"
+          stroke="rgba(0,0,0,0.35)"
+          strokeWidth={1.25}
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <circle cx={CX} cy={CY} r={6} fill="#e8e8e8" />
 
         {/* Speed ring */}
         <motion.circle cx={CX} cy={CY} r={18} fill="none" stroke={ORANGE}

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSandbox } from '../../context/SandboxContext';
-import { ORANGE } from '../../theme';
+import { ORANGE, SANDBOX_CARD_BG, SANDBOX_CARD_BORDER } from '../../theme';
 
 interface Props {
   playerNames: string[];
@@ -37,25 +37,30 @@ export function SandboxControls({ playerNames }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-6 p-4 rounded-2xl mb-6"
-      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-
-      {/* Player search */}
-      <div className="relative flex-1 min-w-52">
-        <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+    <div
+      className="flex flex-wrap items-end justify-center gap-x-8 gap-y-4 p-4 rounded-2xl w-full max-w-3xl mx-auto mb-2"
+      style={{ background: SANDBOX_CARD_BG, border: `1px solid ${SANDBOX_CARD_BORDER}` }}
+    >
+      {/* Player search — same structure as static index (label + field inline feel) */}
+      <div className="relative min-w-[min(100%,14rem)] flex-1 max-w-sm">
+        <label className="sr-only" htmlFor="sandbox-player">
           Player
         </label>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <span className="text-sm font-bold text-white shrink-0">Player:</span>
         <input
+          id="sandbox-player"
           ref={inputRef}
           type="text"
           value={inputVal}
           onChange={e => handleInput(e.target.value)}
           onFocus={() => inputVal.length >= 2 && suggestions.length > 0 && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
-          placeholder="e.g. Yordan Alvarez"
-          className="w-full rounded-xl px-4 py-2.5 text-sm font-bold text-white outline-none"
+          placeholder="e.g., Shohei Ohtani"
+          className="w-full min-w-0 rounded-lg px-3 py-2 text-sm font-bold text-white outline-none"
           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
         />
+        </div>
         <AnimatePresence>
           {open && (
             <motion.ul
@@ -89,11 +94,9 @@ export function SandboxControls({ playerNames }: Props) {
         </AnimatePresence>
       </div>
 
-      {/* Strike count toggle */}
-      <div>
-        <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          Strike Count
-        </label>
+      {/* Strike count — “Strikes:” + 0 / 2 like the original radios */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+        <span className="text-sm font-bold text-white shrink-0">Strikes:</span>
         <div className="flex gap-2">
           {(['0', '2'] as const).map(count => (
             <button
